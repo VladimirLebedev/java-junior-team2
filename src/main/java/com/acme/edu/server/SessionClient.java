@@ -1,44 +1,30 @@
 package com.acme.edu.server;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.util.List;
 
-public class SessionClient implements Runnable {
+public class SessionClient{
     private Socket connection;
-    private BufferedWriter writer;
-    private List<SessionClient> clientList;
 
-    public SessionClient(Socket connection, List<SessionClient> clientlist) {
+    SessionClient(Socket connection) {
         this.connection = connection;
-        this.clientList = clientlist;
     }
 
-    @Override
     public void run() {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                  BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()))){
-                this.writer = writer;
-            System.out.println("ready input");
-            while (!Thread.interrupted()) {
-                System.out.println(1);
+            while (true) {
                 String message = reader.readLine();
+                writer.write(message);
+                writer.newLine();
+                writer.flush();
                 System.out.println(message);
-                for (SessionClient client : clientList) {
-                    client.send(message);
-                }
-                //business-logic
             }
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void send(String message){
-        System.out.println("message = " + message);
-        try {
-            writer.write(message);
         } catch (IOException e) {
             e.printStackTrace();
         }

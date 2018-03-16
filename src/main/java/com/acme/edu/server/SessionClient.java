@@ -3,18 +3,20 @@ package com.acme.edu.server;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.Date;
-import java.util.List;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 
 class SessionClient implements Runnable {
     private Socket connection;
     private BufferedWriter writer;
-    private List<SessionClient> clientList;
-    private static Object monitor = new Object();
+    private Set<SessionClient> clientSet;
+    private static final Object monitor = new Object();
+    private BlockingQueue<String> queue;
 
-    SessionClient(Socket connection, List<SessionClient> clientlist) {
+    SessionClient(Socket connection, Set<SessionClient> clientSet, BlockingQueue<String> queue) {
         this.connection = connection;
-        this.clientList = clientlist;
+        this.clientSet = clientSet;
+        this.queue = queue;
         addIntoList();
     }
 
@@ -28,7 +30,7 @@ class SessionClient implements Runnable {
             while (true) {
                 try {
                     message = reader.readLine();
-                    new Parser(message,null,this);
+                    new Parser(message,this);
                 } catch (SocketException e) {
                     System.out.println("connection terminated");
                     removeIntoList();
@@ -39,7 +41,7 @@ class SessionClient implements Runnable {
                 //business-logic
             }
             connection.close();
-            //clientList.remove(this);
+            //clientSet.remove(this);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -47,32 +49,28 @@ class SessionClient implements Runnable {
     }
 
     public void sendToAll(String message) {
-        synchronized (monitor) {
-            for (SessionClient client : clientList) {
-                client.send(message);
-            }
-        }
+        queue.offer(message);
     }
 
     private void addIntoList() {
         synchronized (monitor) {
-            clientList.add(this);
+            clientSet.add(this);
         }
-        //System.out.println(clientList);
+        System.out.println(clientSet);
     }
 
     private void removeIntoList() {
         synchronized (monitor) {
-            clientList.remove(this);
-            System.out.println(clientList);
+            clientSet.remove(this);
+            System.out.println(clientSet);
         }
     }
 
-    private void send(String message) {
+    public void send(String message) {
         //System.out.println("message = " + message);
         try {
-            System.out.println("list size: "+clientList.size());
-            writer.write(message +" "+new Date().toString());
+            System.out.println("list size: "+ clientSet.size());
+            writer.write(message);
             writer.newLine();
             writer.flush();
         } catch (IOException e) {

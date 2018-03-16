@@ -9,10 +9,12 @@ public class SessionClient implements Runnable {
     private Socket connection;
     private BufferedWriter writer;
     private List<SessionClient> clientList;
+    public static Object monitor = new Object();
 
-    public SessionClient(Socket connection, List<SessionClient> clientlist) {
+    SessionClient(Socket connection, List<SessionClient> clientlist) {
         this.connection = connection;
         this.clientList = clientlist;
+        addIntoList();
     }
 
     @Override
@@ -25,32 +27,52 @@ public class SessionClient implements Runnable {
             while (true) {
                 try {
                     message = reader.readLine();
-                } catch (SocketException e){
+                } catch (SocketException e) {
                     System.out.println("connection terminated");
+                    removeIntoList();
                     break;
                 }
                 System.out.println(message);
-                for (SessionClient client : clientList) {
-                    client.send(message);
-                    System.out.println(2);
+                synchronized (monitor) {
+                    for (SessionClient client : clientList) {
+                        client.send(message);
+                    }
                 }
                 //business-logic
             }
             connection.close();
-            clientList.remove(this);
+            //clientList.remove(this);
+
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void addIntoList() {
+        synchronized (monitor) {
+            clientList.add(this);
+        }
+        //System.out.println(clientList);
+    }
+
+    private void removeIntoList() {
+        synchronized (monitor) {
+            clientList.remove(this);
+            System.out.println(clientList);
         }
     }
 
     public void send(String message) {
         //System.out.println("message = " + message);
         try {
+            System.out.println("list size: "+clientList.size());
             writer.write(message);
             writer.newLine();
             writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
     }
 }

@@ -23,7 +23,8 @@ public class Acceptor implements Runnable {
                     socketList.add(connection);
 
                     SessionClient client = new SessionClient(connection,clientList);
-                    clientList.add(client);
+                    //clientList.add(client);
+                    //addIntoList(client);
                     System.out.println("ready");
 
                     Thread threadClient = new Thread(client);
@@ -36,6 +37,11 @@ public class Acceptor implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void addIntoList(SessionClient sessionClient){
+        clientList.add(sessionClient);
+        //System.out.println(clientList);
     }
 
     public void stop(){

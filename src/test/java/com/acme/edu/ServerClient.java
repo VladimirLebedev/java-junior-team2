@@ -7,7 +7,7 @@ import junit.framework.TestSuite;
 /**
  * Unit test for simple Server.
  */
-public class ServerTest
+public class ServerClient
     extends TestCase
 {
     /**
@@ -15,7 +15,7 @@ public class ServerTest
      *
      * @param testName name of the test case
      */
-    public ServerTest(String testName )
+    public ServerClient(String testName )
     {
         super( testName );
     }
@@ -25,11 +25,11 @@ public class ServerTest
      */
     public static Test suite()
     {
-        return new TestSuite( ServerTest.class );
+        return new TestSuite( ServerClient.class );
     }
 
     /**
-     * Rigourous Test :-)
+     * Rigourous Client :-)
      */
     public void testApp()
     {

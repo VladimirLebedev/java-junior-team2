@@ -1,48 +1,46 @@
 package com.acme.edu.client;
 
 import java.io.*;
-import java.net.Socket;
+import java.util.Scanner;
 
 public class Client {
 
     public static void main(String[] args) {
-        Thread readProcess = null;
+        Connector connector = null;
+        Thread connectionLoop = null;
+        try {
+            connector = new Connector();
+            connector.connect();
+            System.out.println("Вы присоединились к чату!");
+            connectionLoop = new Thread(new MessagePrinter(connector.getServerSocket()));
+            connectionLoop.start();
 
-        try (Socket connection = new Socket("192.168.1.49", 4040);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-             PrintWriter writer = new PrintWriter(new OutputStreamWriter(connection.getOutputStream()), true);
-             BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in))) {
-            String message = "";
+            try (Scanner scanner = new Scanner(System.in);
+                    PrintWriter printWriter = new PrintWriter(
+                            new OutputStreamWriter(connector.getServerSocket().getOutputStream()), true)) {
+                while (scanner.hasNextLine()) {
+                    String inputMessage = scanner.nextLine();
+                    inputMessage = inputMessage.substring(0, 150);
 
-            readProcess = new Thread(() -> {
-                while (!Thread.interrupted()) {
-                    try {
-                        if (reader.ready()) {
-                            System.out.println(reader.readLine());
-                        }
+                    printWriter.println(inputMessage);
 
-                        try {
-                            Thread.sleep(1);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    if (inputMessage.equals("/exit")) {
+                        break;
                     }
                 }
-            });
-            readProcess.start();
-            while (!message.equals("/exit")) {
-                message = consoleReader.readLine();
-                writer.println(message);
+                System.out.println("Вы вышли из чата!");
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-
         } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (readProcess != null) {
-                readProcess.interrupt();
+            System.out.println("Подключение к серверу не удалось.");
+        }
+        finally {
+            if (connectionLoop != null) {
+                connectionLoop.interrupt();
+            }
+            if (connector != null) {
+                connector.close();
             }
         }
     }

@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.Scanner;
 
 public class Client {
+    private static final int MAX_MESSAGE_LENGTH = 150;
 
     public static void main(String[] args) {
         Connector connector = null;
@@ -12,6 +13,7 @@ public class Client {
             connector = new Connector();
             connector.connect();
             System.out.println("Вы присоединились к чату!");
+
             connectionLoop = new Thread(new MessagePrinter(connector.getServerSocket()));
             connectionLoop.start();
 
@@ -20,13 +22,16 @@ public class Client {
                             new OutputStreamWriter(connector.getServerSocket().getOutputStream()), true)) {
                 while (scanner.hasNextLine()) {
                     String inputMessage = scanner.nextLine();
-                    inputMessage = inputMessage.substring(0, 150);
-
-                    printWriter.println(inputMessage);
 
                     if (inputMessage.equals("/exit")) {
                         break;
                     }
+
+                    if (inputMessage.length() > MAX_MESSAGE_LENGTH) {
+                        inputMessage = inputMessage.substring(0, MAX_MESSAGE_LENGTH);
+                    }
+
+                    printWriter.println(inputMessage);
                 }
                 System.out.println("Вы вышли из чата!");
             } catch (IOException e) {

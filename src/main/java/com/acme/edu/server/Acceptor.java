@@ -11,8 +11,6 @@ import java.util.concurrent.BlockingQueue;
 public class Acceptor implements Runnable {
     private Set<SessionClient> clientSet = new HashSet<>();
     private BlockingQueue<String> queue = new ArrayBlockingQueue<>(100);
-//    private List<Socket> socketList = new LinkedList<>();
-//    private List<Thread> threadList = new LinkedList<>();
 
     public void run(){
         new Thread(new Sender(queue, clientSet)).start();
@@ -23,16 +21,12 @@ public class Acceptor implements Runnable {
                 System.out.println("listening....");
                 try {
                     Socket connection = portListener.accept();
-//                    socketList.add(connection);
 
                     SessionClient client = new SessionClient(connection, clientSet, queue);
-                    //clientSet.add(client);
-                    //addIntoList(client);
                     System.out.println("ready");
 
                     Thread threadClient = new Thread(client);
                     threadClient.start();
-//                    threadList.add(threadClient);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
